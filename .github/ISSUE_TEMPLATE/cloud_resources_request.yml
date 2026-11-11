@@ -1,7 +1,7 @@
-name: Cloud Resources Request Form
+name: Cloud Resources Request Form (New)
 description: Request CIROH cloud resources or API access for a project.
 title: "[Cloud Resource Request]: "
-labels: ["infrastructure", "resource-request"]
+labels: ["infrastructure", "R2OHC Resource request", "need approval"]
 body:
   - type: markdown
     attributes:
@@ -9,11 +9,34 @@ body:
         ## Cloud Resources Request Form
         Please fill out the required fields so the infrastructure team can review and process your request.
 
+        **How access works.** Cloud resources are granted as a lease that follows the
+        [CIROH Cloud Lifecycle Policy](https://hub.ciroh.org/docs/policies/cloud-lifecycle/):
+        - Each lease has an end date of up to 12 months, and you can renew it.
+        - We post reminders on this issue 30, 14 and 7 days before the end date.
+        - If the lease isn't renewed, access becomes read-only on the end date, compute stops 30 days later,
+          your data is handled according to the plan you choose below 60 days later, and remaining resources are deleted 90 days later.
+
+        This issue stays open while the lease is active. Use comments on this issue to renew, add or remove people, or end early.
+
+        > This repository is public. Don't put passwords, keys or sensitive data in this form.
+
+  # ---------- People ----------
+
   - type: input
     id: pi-full-name
     attributes:
-      label: "PI's Full Name"
+      label: "PI's Full Name (Data Steward)"
+      description: The CIROH-funded PI who is accountable for these resources and their data.
       placeholder: "e.g. Dr. Jane Doe"
+    validations:
+      required: true
+
+  - type: input
+    id: pi-github
+    attributes:
+      label: "PI's GitHub Username"
+      description: Renewal and closeout notices @mention this account. Ask the PI to watch this issue.
+      placeholder: "e.g. janedoe"
     validations:
       required: true
 
@@ -29,6 +52,7 @@ body:
     id: pi-email
     attributes:
       label: "PI's Affiliated Email Address"
+      description: Used only if we can't reach the PI on GitHub.
       placeholder: "e.g. jdoe@ua.edu"
     validations:
       required: true
@@ -36,34 +60,93 @@ body:
   - type: input
     id: requester-full-name
     attributes:
-      label: "Requester's Full Name"
-      description: Leave blank only if the requester is the same as the PI.
+      label: "Technical Contact's Full Name"
+      description: The person who will use the resources day to day. Enter "Same as PI" if the PI is also the technical contact.
       placeholder: "e.g. John Smith"
+    validations:
+      required: true
+
+  - type: input
+    id: requester-github
+    attributes:
+      label: "Technical Contact's GitHub Username"
+      placeholder: "e.g. jsmith"
     validations:
       required: true
 
   - type: input
     id: requester-email
     attributes:
-      label: "Requester's Affiliated Email Address"
+      label: "Technical Contact's Affiliated Email Address"
       placeholder: "e.g. jsmith@ua.edu"
     validations:
       required: true
 
   - type: input
+    id: institution-lead
+    attributes:
+      label: Institution's CIROH Lead
+      description: |
+        If we can't reach the PI or technical contact for 30 days, the institution's CIROH lead
+        decides what happens to the resources and data.
+      placeholder: "e.g. Dr. Alex Lee (GitHub: alexlee)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: access-users
+    attributes:
+      label: People Who Need Access
+      description: |
+        One person per line: GitHub username, institution, and role. Everyone signs in through CIROH SSO.
+        We don't issue personal access keys. To add or remove people later, comment on this issue.
+      placeholder: |
+        jsmith, University of Alabama, graduate student
+        janedoe, University of Alabama, PI
+    validations:
+      required: true
+
+  # ---------- Project ----------
+
+  - type: input
     id: project-number
     attributes:
       label: CIROH Project Number
-      description: As listed in Smartsheet.
+      description: As listed in Smartsheet. Use "Not funded by CIROH" if this doesn't apply. It becomes the `Project` tag on every resource.
       placeholder: "e.g. CIROH-2024-001"
     validations:
-      required: false
+      required: true
 
   - type: input
     id: project-name
     attributes:
       label: CIROH Project Name
       placeholder: "e.g. NextGen Water Modeling Framework"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: product
+    attributes:
+      label: CIROH Cloud Product Used
+      description: Which CIROH Cloud product does this project build on or extend?
+      options:
+        - "None / standalone research project"
+        - "NWM BigQuery API"
+        - "NRDS"
+        - "TEEHR"
+        - "NGIAB"
+        - "Tethys Platform"
+        - "HydroServer"
+        - "HydroShare"
+        - "WaterNode"
+        - "CRIMSON"
+        - "FIM Ecosystem"
+        - "CSES"
+        - "CHPT"
+        - "CIROH Hub"
+        - "RIVR"
+        - "New product to be deployed on CIROH Cloud"
     validations:
       required: true
 
@@ -78,14 +161,23 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: resource-requirements
+  - type: dropdown
+    id: working-group
     attributes:
-      label: Resource Requirements
-      description: Specify compute, storage, network, and any special configuration needs.
-      placeholder: Include expected instance sizes, storage needs, network requirements, and workload patterns.
+      label: Working Group
+      options:
+        - "Flood Inundation Mapping Working Group"
+        - "Decision Support Working Group"
+        - "Hydrologic Modeling and Prediction Working Group"
+        - "Hydroinformatics Working Group"
+        - "Early Career Working Group"
+        - "Community Resources Working Group"
+        - "Artificial Intelligence Working Group"
+        - "Model & Forecast Evaluation Working Group"
     validations:
       required: true
+
+  # ---------- Resources ----------
 
   - type: checkboxes
     id: cloud-provider-options
@@ -107,21 +199,21 @@ body:
         - CIROH-2i2c JupyterHub: https://hub.ciroh.org/docs/services/cloudservices/2i2c/
         - NWM BigQuery API: https://hub.ciroh.org/docs/products/data-management/bigquery-api/
 
+  - type: textarea
+    id: resource-requirements
+    attributes:
+      label: Resource Requirements
+      description: Specify compute, storage, network, and any special configuration needs.
+      placeholder: Include expected instance sizes, storage needs (TB), network requirements, and workload patterns.
+    validations:
+      required: true
+
   - type: markdown
     attributes:
       value: |
         ---
         ### CIROH-2i2c JupyterHub Access
-        > Complete the fields below **only if you selected CIROH-2i2c JupyterHub** above.
-
-  - type: input
-    id: jupyterhub-github-id
-    attributes:
-      label: GitHub ID (2i2c JupyterHub only)
-      description: Required for provisioning access to the CIROH-2i2c JupyterHub environment.
-      placeholder: "e.g. github-username"
-    validations:
-      required: false
+        > Complete this **only if you selected CIROH-2i2c JupyterHub** above. We grant access to the GitHub usernames listed under People Who Need Access.
 
   - type: dropdown
     id: jupyterhub-compute-type
@@ -154,6 +246,7 @@ body:
         - label: "ECS"
         - label: "EKS"
         - label: "Lambda"
+        - label: "Bedrock / OpenSearch (AI, chatbots, vector search)"
         - label: "Other AWS services"
 
   - type: input
@@ -190,26 +283,13 @@ body:
     validations:
       required: false
 
-  - type: dropdown
-    id: working-group
-    attributes:
-      label: Working Group
-      options:
-        - "Flood Inundation Mapping Working Group"
-        - "Decision Support Working Group"
-        - "Hydrologic Modeling and Prediction Working Group"
-        - "Hydroinformatics Working Group"
-        - "Early Career Working Group"
-        - "Community Resources Working Group"
-        - "Artificial Intelligence Working Group"
-        - "Model & Forecast Evaluation Working Group"
-    validations:
-      required: true
+  # ---------- Lease ----------
 
   - type: input
     id: project-start-date
     attributes:
-      label: Project Start Date
+      label: Access Start Date
+      description: Format YYYY-MM-DD.
       placeholder: "e.g. 2026-04-01"
     validations:
       required: true
@@ -217,7 +297,10 @@ body:
   - type: input
     id: project-end-date
     attributes:
-      label: Project End Date
+      label: Access End Date
+      description: |
+        Format YYYY-MM-DD. No more than 12 months after the start date, and no later than the project's award end date.
+        You can renew before it ends. This becomes the `EndDate` tag on every resource.
       placeholder: "e.g. 2027-03-31"
     validations:
       required: true
@@ -231,31 +314,86 @@ body:
     validations:
       required: false
 
-  - type: textarea
-    id: security-compliance
-    attributes:
-      label: Security and Compliance Requirements
-      placeholder: Describe any security, compliance, or data handling constraints.
-    validations:
-      required: false
-
   - type: markdown
     attributes:
       value: |
         ### Cost Estimation
-        For AWS and GCP requests, provide an estimated cost for the workshop and include any assumptions used.
+        For AWS and GCP requests, provide an estimated cost for the project and include any assumptions used.
 
         - [AWS Cost Calculator](https://calculator.aws/#/)
         - [Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator)
+
+  - type: input
+    id: monthly-budget
+    attributes:
+      label: Monthly Budget (USD)
+      description: |
+        A single number. We set a budget alert at this amount: you're notified at 80% and 100%. At 120%, access becomes
+        read-only until an exceeding-budget request is approved.
+      placeholder: "e.g. 250"
+    validations:
+      required: true
 
   - type: textarea
     id: cost-estimation
     attributes:
       label: Cost Estimation Details
-      description: Required for AWS and GCP requests. Include your estimate and assumptions.
+      description: Required for AWS and GCP requests. Include your estimate and assumptions, or a link to a saved calculator estimate.
       placeholder: Enter your cost estimation details here.
     validations:
       required: true
+
+  # ---------- Data ----------
+
+  - type: dropdown
+    id: data-classification
+    attributes:
+      label: Data Classification
+      description: The most sensitive data these resources will hold.
+      options:
+        - "Public: openly licensed or published data"
+        - "Internal: unpublished research data, no restrictions"
+        - "Restricted: data use agreement, export control, or personal data"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data-plan
+    attributes:
+      label: Data Plan at End of Access
+      description: What should happen to the data if the lease ends without renewal? You can change this in a comment before the end date.
+      options:
+        - "Delete: nothing needs to be kept"
+        - "Transfer: we will copy it to our own storage or HydroShare before the end date"
+        - "Archive: keep it in cold storage for 3 years (CIROH pays the cost)"
+        - "Publish: keep it as a public community dataset (requires a named long-term owner)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: security-compliance
+    attributes:
+      label: Security and Compliance Requirements
+      description: Required if you chose Restricted above. Describe the agreement or constraint and who must approve access.
+      placeholder: Describe any security, compliance, or data handling constraints.
+    validations:
+      required: false
+
+  # ---------- Agreement ----------
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: "I understand access becomes read-only on the end date and resources are deleted 90 days later unless the lease is renewed."
+          required: true
+        - label: "I will comment on this issue when someone no longer needs access, or when the project ends early."
+          required: true
+        - label: "I will tag resources I create with the `Project`, `RequestId` and `EndDate` values the IT team provides."
+          required: true
+        - label: "The PI has reviewed and approved this request."
+          required: true
 
   - type: textarea
     id: approval
